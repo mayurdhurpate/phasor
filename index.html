@@ -89,9 +89,11 @@
             player.body.collideWorldBounds = true;
             player.animations.add('left', [0, 1, 2, 3], 10, true);
             player.animations.add('right', [5, 6, 7, 8], 10, true);
+            player.animations.add('rightFast', [5, 6, 7, 8], 20, true);
+            player.animations.add('rightSlow', [5, 6, 7, 8], 8, true);
             player.body.velocity.x = 0;
             player.animations.play('right');
-            player.jump = function (){
+            player.jump = function() {
                 player.body.velocity.y = -550;
             };
             //  Finally some stars to collect
@@ -140,6 +142,22 @@
             cursors = game.input.keyboard.createCursorKeys();
             game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON);
             game.input.onTap.add(player.jump, this);
+            this.game.input.keyboard.onDownCallback = function(e) {
+                if (e.keyCode == 32) {
+                    if (player.body.gravity.y == 650)
+                        player.body.gravity.y = -650;
+                    else
+                        player.body.gravity.y = 650;
+                }
+
+            };
+            window.setInterval(function() {
+                var enemy = enemies.create(4 * 200 + Math.random() * 20 - 10, Math.random() * 500, 'enemy');
+                enemy.body.gravity.y = 0;
+                enemy.body.velocity.x = -150;
+                enemy.animations.add('left', [0, 1], 5, true);
+                enemy.animations.play('left');
+            }, 6000);
         }
 
         function update() {
@@ -158,12 +176,9 @@
                     }
                     if (star.y > game.world.height - 64) {
                         star.destroy();
-                        var newStar = stars.create(10 * 80 + Math.random() * 20 - 10, Math.random() * 500, 'star');
-
-                        //  Let gravity do its thing
-                        //star.body.immovable = true;
-                        newStar.body.gravity.y = 0;
-                        newStar.body.velocity.x = -250;
+                        // var newStar = stars.create(10 * 80 + Math.random() * 20 - 10, Math.random() * 500, 'star');
+                        // newStar.body.gravity.y = 0;
+                        // newStar.body.velocity.x = -250;
                     }
                 }, this);
 
@@ -179,20 +194,18 @@
 
 
 
-            // if (cursors.left.isDown )
-            // {
-            //     //  Move to the left
-            //     player.body.velocity.x = -150;
-
-            //     player.animations.play('left');
-            // }
-            // else if (cursors.right.isDown )
-            // {
-            //     //  Move to the right
-            //     player.body.velocity.x = 150;
-
-            //     player.animations.play('right');
-            // }
+            if (cursors.left.isDown) {
+                //  Move to the left
+                player.body.velocity.x = -150;
+                player.animations.play('rightSlow');
+            } else if (cursors.right.isDown) {
+                //  Move to the right
+                player.body.velocity.x = 150;
+                player.animations.play('rightFast');
+            } else {
+                player.body.velocity.x = 0;
+                player.animations.play('right');
+            }
             // else if( player.body.touching.down)
             // {
             //     //  Stand still
@@ -205,6 +218,14 @@
             //  Allow the player to jump if they are touching the ground.
             if (cursors.up.isDown && player.body.touching.down) {
                 player.jump();
+            }
+
+            if (stars.length == 0) {
+                game.add.text(800 / 2 - 100, 600 / 2 - 100, 'You Won!', {
+                    fontSize: '42px',
+                    fill: '#000'
+                });
+                game.paused = true;
             }
 
         }
