@@ -58,6 +58,7 @@
         var enemies;
         var score = 0;
         var scoreText;
+        var downPressed = false;
 
         function create() {
 
@@ -120,7 +121,7 @@
             enemies.enableBody = true;
 
             //  Here we'll create 12 of them evenly spaced apart
-            for (var i = 0; i < 4; i++) {
+            for (var i = 3; i < 7; i++) {
                 //  Create a star inside of the 'stars' group
                 var enemy = enemies.create(i * 200 + Math.random() * 20 - 10, Math.random() * 500, 'enemy');
 
@@ -144,6 +145,9 @@
             game.input.onTap.add(player.jump, this);
             this.game.input.keyboard.onDownCallback = function(e) {
                 if (e.keyCode == 32) {
+                    e.preventDefault();
+
+
                     if (player.body.gravity.y == 650)
                         player.body.gravity.y = -650;
                     else
@@ -202,7 +206,13 @@
                 //  Move to the right
                 player.body.velocity.x = 150;
                 player.animations.play('rightFast');
-            } else {
+            }
+             else if (cursors.down.isDown && (player.body.gravity.y>0 || player.y == 0) ) {
+                //  Move to the right
+                player.body.velocity.y = 550;
+                player.animations.play('right');
+            }
+             else {
                 player.body.velocity.x = 0;
                 player.animations.play('right');
             }
