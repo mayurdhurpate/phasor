@@ -40,7 +40,9 @@
         });
 
         function preload() {
-
+            this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+            this.game.scale.pageAlignHorizontally = true;
+            this.game.scale.pageAlignVertically = true;
 
             game.load.image('sky', 'assets/sky.png');
             game.load.image('ground', 'assets/platform.png');
@@ -59,15 +61,14 @@
         var score = 0;
         var scoreText;
         var downPressed = false;
+        var restart = false;
 
         function create() {
 
             // var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
             // logo.anchor.setTo(0.5, 0.5);
             //game.world.setBounds(0, 0, 1400, 600);
-            this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            this.game.scale.pageAlignHorizontally = true;
-            this.game.scale.pageAlignVertically = true;
+
             //game.add.tileSprite(0, 0, 1400, 600, 'sky');
             game.add.sprite(0, 0, 'sky');
             game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -121,19 +122,7 @@
             enemies.enableBody = true;
 
             //  Here we'll create 12 of them evenly spaced apart
-            for (var i = 3; i < 7; i++) {
-                //  Create a star inside of the 'stars' group
-                var enemy = enemies.create(i * 200 + Math.random() * 20 - 10, Math.random() * 500, 'enemy');
-
-                //  Let gravity do its thing
-                //star.body.immovable = true;
-                enemy.body.gravity.y = 0;
-                enemy.body.velocity.x = -150;
-                enemy.animations.add('left', [0, 1], 5, true);
-                enemy.animations.play('left');
-                //  This just gives each star a slightly random bounce value
-                //star.body.bounce.y = 0.7 + Math.random() * 0.2;
-            }
+            createEnemies();
 
 
             scoreText = game.add.text(16, 16, 'score: 0', {
@@ -142,26 +131,30 @@
             });
             cursors = game.input.keyboard.createCursorKeys();
             game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON);
-            game.input.onTap.add(player.jump, this);
-            this.game.input.keyboard.onDownCallback = function(e) {
-                if (e.keyCode == 32) {
-                    e.preventDefault();
+
+            if (!restart) {
+                window.setInterval(function() {
+                    var enemy = enemies.create(4 * 200 + Math.random() * 20 - 10, Math.random() * 500, 'enemy');
+                    enemy.body.gravity.y = 0;
+                    enemy.body.velocity.x = -150;
+                    enemy.animations.add('left', [0, 1], 5, true);
+                    enemy.animations.play('left');
+                }, 6000);
+                game.input.onTap.add(player.jump, this);
+                this.game.input.keyboard.onDownCallback = function(e) {
+                    if (e.keyCode == 32) {
+                        e.preventDefault();
 
 
-                    if (player.body.gravity.y == 650)
-                        player.body.gravity.y = -650;
-                    else
-                        player.body.gravity.y = 650;
-                }
+                        if (player.body.gravity.y == 650)
+                            player.body.gravity.y = -650;
+                        else
+                            player.body.gravity.y = 650;
+                    }
 
-            };
-            window.setInterval(function() {
-                var enemy = enemies.create(4 * 200 + Math.random() * 20 - 10, Math.random() * 500, 'enemy');
-                enemy.body.gravity.y = 0;
-                enemy.body.velocity.x = -150;
-                enemy.animations.add('left', [0, 1], 5, true);
-                enemy.animations.play('left');
-            }, 6000);
+                };
+                restart = true;
+            }
         }
 
         function update() {
@@ -206,13 +199,11 @@
                 //  Move to the right
                 player.body.velocity.x = 150;
                 player.animations.play('rightFast');
-            }
-             else if (cursors.down.isDown && (player.body.gravity.y>0 || player.y == 0) ) {
+            } else if (cursors.down.isDown && (player.body.gravity.y > 0 || player.y == 0)) {
                 //  Move to the right
                 player.body.velocity.y = 550;
                 player.animations.play('right');
-            }
-             else {
+            } else {
                 player.body.velocity.x = 0;
                 player.animations.play('right');
             }
@@ -231,11 +222,17 @@
             }
 
             if (stars.length == 0) {
-                game.add.text(800 / 2 - 100, 600 / 2 - 100, 'You Won!', {
+                game.add.text(800 / 2 - 100, 600 / 2 - 100, 'You Won!\n Restarting..', {
                     fontSize: '42px',
                     fill: '#000'
                 });
                 game.paused = true;
+                setTimeout(function() {
+
+                    score = 0;
+                    create();
+                    game.paused = false;
+                }, 3000);
             }
 
         }
@@ -252,15 +249,37 @@
 
         }
 
+        function createEnemies() {
+            for (var i = 3; i < 7; i++) {
+                //  Create a star inside of the 'stars' group
+                var enemy = enemies.create(i * 200 + Math.random() * 20 - 10, Math.random() * 500, 'enemy');
+
+                //  Let gravity do its thing
+                //star.body.immovable = true;
+                enemy.body.gravity.y = 0;
+                enemy.body.velocity.x = -150;
+                enemy.animations.add('left', [0, 1], 5, true);
+                enemy.animations.play('left');
+                //  This just gives each star a slightly random bounce value
+                //star.body.bounce.y = 0.7 + Math.random() * 0.2;
+            }
+        }
+
         function gameOver(player, enemy) {
 
 
             // Then add the menu
-            game.add.text(800 / 2 - 100, 600 / 2 - 100, 'Game Over', {
-                fontSize: '42px',
+            game.add.text(800 / 2 - 100, 600 / 2 - 100, 'Game Over.\n Restarting ...', {
+                fontSize: '32px',
                 fill: '#000'
             });
             game.paused = true;
+            setTimeout(function() {
+
+                score = 0;
+                create();
+                game.paused = false;
+            }, 3000);
         }
 
     };
